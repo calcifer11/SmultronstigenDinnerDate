@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f8f4ec" />
+    <title>Smultronstigen Dinner</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Smultronstigen</p>
+          <h1>Dinner board</h1>
+          <span class="sync-badge" id="syncBadge">Local only</span>
+        </div>
+        <button class="icon-button" id="resetDemoButton" type="button" aria-label="Reset demo data" title="Reset demo data">
+          <span aria-hidden="true">↻</span>
+        </button>
+      </header>
+
+      <main>
+        <section class="action-panel" aria-label="Dinner actions">
+          <div class="hero-art" aria-hidden="true">
+            <img src="assets/hero-dinner-1.png" alt="" />
+            <img src="assets/hero-dinner-2.png" alt="" />
+          </div>
+          <div class="welcome-copy">
+            <span class="season-pill">Tonight on the street</span>
+            <h2>Plan the next cozy dinner without a long group chat.</h2>
+            <p>Post when you can host, join a neighbor's table, and keep menus clear for every party.</p>
+          </div>
+          <div class="primary-actions">
+            <button class="primary-button" id="openHostButton" type="button">
+              <span aria-hidden="true">⌂</span>
+              Host
+            </button>
+            <button class="secondary-button" id="openJoinButton" type="button">
+              <span aria-hidden="true">＋</span>
+              Join
+            </button>
+          </div>
+        </section>
+
+        <section class="stats-strip" aria-label="Current dinner summary">
+          <div>
+            <strong id="liveCount">0</strong>
+            <span>live hosts</span>
+          </div>
+          <div>
+            <strong id="seatCount">0</strong>
+            <span>open seats</span>
+          </div>
+          <div>
+            <strong id="guestCount">0</strong>
+            <span>joining</span>
+          </div>
+        </section>
+
+        <section class="section-header">
+          <div>
+            <p class="eyebrow">Upcoming</p>
+            <h2>Live dinner invites</h2>
+          </div>
+          <select id="sortSelect" aria-label="Sort dinners">
+            <option value="date">Soonest</option>
+            <option value="seats">Most room</option>
+            <option value="recent">Newest</option>
+          </select>
+        </section>
+
+        <section class="host-list" id="hostList" aria-live="polite"></section>
+      </main>
+    </div>
+
+    <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+
+    <dialog class="sheet" id="hostDialog" aria-labelledby="hostDialogTitle">
+      <form id="hostForm" method="dialog">
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow">New invite</p>
+            <h2 id="hostDialogTitle">Host dinner</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="button" data-close-dialog aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            Your name
+            <input id="hostName" name="hostName" autocomplete="name" required placeholder="Anna" />
+          </label>
+          <label>
+            Date
+            <input id="hostDate" name="hostDate" type="date" required />
+          </label>
+          <label>
+            Time
+            <input id="hostTime" name="hostTime" type="time" required value="18:30" />
+          </label>
+          <label>
+            Seats available
+            <input id="hostSeats" name="hostSeats" type="number" min="1" max="24" value="4" required />
+          </label>
+        </div>
+
+        <fieldset class="segmented-field">
+          <legend>Location</legend>
+          <label>
+            <input type="radio" name="hostLocation" value="Our place" checked />
+            <span>Our place</span>
+          </label>
+          <label>
+            <input type="radio" name="hostLocation" value="Your place" />
+            <span>Your place</span>
+          </label>
+          <label>
+            <input type="radio" name="hostLocation" value="Garden" />
+            <span>Garden</span>
+          </label>
+        </fieldset>
+
+        <section class="menu-builder" aria-labelledby="menuBuilderTitle">
+          <div class="section-header compact">
+            <div>
+              <p class="eyebrow">Food</p>
+              <h3 id="menuBuilderTitle">Menu options</h3>
+            </div>
+            <button class="text-button" id="addCustomFoodButton" type="button">Custom</button>
+          </div>
+          <div class="food-search-row">
+            <input id="foodSearch" type="search" placeholder="Search common foods" aria-label="Search common foods" />
+          </div>
+          <div class="food-chips" id="foodChips"></div>
+          <div class="selected-menu" id="selectedMenu"></div>
+        </section>
+
+        <label>
+          Notes
+          <textarea id="hostNotes" rows="3" placeholder="Allergies, kid-friendly details, what to bring..."></textarea>
+        </label>
+
+        <div class="sheet-actions">
+          <button class="secondary-button" type="button" data-close-dialog>Cancel</button>
+          <button class="primary-button" type="submit">Publish host</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="sheet" id="joinDialog" aria-labelledby="joinDialogTitle">
+      <form id="joinForm" method="dialog">
+        <input type="hidden" id="joinHostId" />
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow">Join dinner</p>
+            <h2 id="joinDialogTitle">Add your party</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="button" data-close-dialog aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        <div class="join-target" id="joinTarget"></div>
+
+        <div class="form-grid">
+          <label>
+            Your name
+            <input id="guestName" autocomplete="name" required placeholder="Erik" />
+          </label>
+          <label>
+            Party size
+            <input id="partySize" type="number" min="1" max="24" value="2" required />
+          </label>
+        </div>
+
+        <label>
+          Preferences or allergies
+          <textarea id="guestNotes" rows="3" placeholder="Vegetarian, no sesame, bringing dessert..."></textarea>
+        </label>
+
+        <div class="sheet-actions">
+          <button class="secondary-button" type="button" data-close-dialog>Cancel</button>
+          <button class="primary-button" type="submit">Join dinner</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="sheet small-sheet" id="customFoodDialog" aria-labelledby="customFoodTitle">
+      <form id="customFoodForm" method="dialog">
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow">Food database</p>
+            <h2 id="customFoodTitle">Add custom food</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="button" data-close-dialog aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <label>
+          Food name
+          <input id="customFoodName" required placeholder="Taco tray" />
+        </label>
+        <label>
+          Customisable toppings or options
+          <input id="customFoodOptions" placeholder="chicken, salsa, jalapeno, cheese" />
+        </label>
+        <div class="sheet-actions">
+          <button class="secondary-button" type="button" data-close-dialog>Cancel</button>
+          <button class="primary-button" type="submit">Add food</button>
+        </div>
+      </form>
+    </dialog>
+
+    <template id="emptyTemplate">
+      <article class="empty-state">
+        <div class="photo-strip" aria-hidden="true">
+          <span class="photo tile-one"></span>
+          <span class="photo tile-two"></span>
+          <span class="photo tile-three"></span>
+        </div>
+        <h2>No dinner invites yet</h2>
+        <p>Be the first Smultronstigen host. Neighbors will see your listing here and can add their party.</p>
+        <button class="primary-button" type="button" data-open-host>Host a dinner</button>
+      </article>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
