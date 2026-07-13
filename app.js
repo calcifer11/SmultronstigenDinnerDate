@@ -63,7 +63,18 @@ const demoHosts = [
         excluded: ["sesame"],
       },
     ],
-    guests: [{ id: "guest-demo", name: "Maja", size: 2, notes: "No sesame, please." }],
+    guests: [
+      {
+        id: "guest-demo",
+        name: "Maja",
+        size: 2,
+        notes: "No sesame, please.",
+        members: [
+          { id: "member-demo-1", name: "Maja", isChild: false },
+          { id: "member-demo-2", name: "Leo", isChild: true },
+        ],
+      },
+    ],
     createdAt: Date.now() - 100000,
   },
 ];
@@ -82,6 +93,7 @@ const els = {
   openJoinButton: document.querySelector("#openJoinButton"),
   hostDialog: document.querySelector("#hostDialog"),
   joinDialog: document.querySelector("#joinDialog"),
+  joinPickerDialog: document.querySelector("#joinPickerDialog"),
   customFoodDialog: document.querySelector("#customFoodDialog"),
   sheetBackdrop: document.querySelector("#sheetBackdrop"),
   hostForm: document.querySelector("#hostForm"),
@@ -98,12 +110,16 @@ const els = {
   addCustomFoodButton: document.querySelector("#addCustomFoodButton"),
   joinHostId: document.querySelector("#joinHostId"),
   joinTarget: document.querySelector("#joinTarget"),
+  joinPickerList: document.querySelector("#joinPickerList"),
+  partyMemberList: document.querySelector("#partyMemberList"),
+  addPartyMemberButton: document.querySelector("#addPartyMemberButton"),
   hostDate: document.querySelector("#hostDate"),
   syncBadge: document.querySelector("#syncBadge"),
 };
 
 let state = loadState();
 let draftMenu = [];
+let draftPartyMembers = [];
 
 function nextDate(days) {
   const date = new Date();
@@ -149,7 +165,13 @@ function hasSupabaseConfig() {
 function normaliseState(nextState) {
   return {
     foods: nextState?.foods?.length ? nextState.foods : clone(starterFoods),
-    hosts: Array.isArray(nextState?.hosts) ? nextState.hosts : [],
+    hosts: Array.isArray(nextState?.hosts)
+      ? nextState.hosts.map((host) => ({
+          ...host,
+          guests: Array.isArray(host.guests) ? host.guests : [],
+          menu: Array.isArray(host.menu) ? host.menu : [],
+        }))
+      : [],
   };
 }
 
@@ -244,7 +266,11 @@ function formatDate(dateString, timeString) {
 }
 
 function seatsTaken(host) {
-  return host.guests.reduce((total, guest) => total + Number(guest.size || 0), 0);
+  return host.guests.reduce((total, guest) => total + guestSize(guest), 0);
+}
+
+function guestSize(guest) {
+  return Array.isArray(guest.members) && guest.members.length ? guest.members.length : Number(guest.size || 0);
 }
 
 function seatsLeft(host) {
@@ -284,7 +310,6 @@ function renderHosts() {
 
   if (!hosts.length) {
     const empty = document.querySelector("#emptyTemplate").content.cloneNode(true);
-    empty.querySelector("[data-open-host]").addEventListener("click", openHostDialog);
     els.hostList.append(empty);
     return;
   }
@@ -329,13 +354,20 @@ function renderMenuTag(item) {
 }
 
 function renderGuest(guest) {
+  const members = Array.isArray(guest.members) ? guest.members : [];
+  const memberSummary = members.length
+    ? members
+        .map((member) => `${member.name || "Guest"}${member.isChild ? " (child)" : ""}`)
+        .join(", ")
+    : `${guestSize(guest)} joining`;
   return `
     <div class="guest-row">
       <div>
         <strong>${escapeHtml(guest.name)}</strong>
+        <div class="guest-members">${escapeHtml(memberSummary)}</div>
         ${guest.notes ? `<div class="guest-notes">${escapeHtml(guest.notes)}</div>` : ""}
       </div>
-      <strong>${Number(guest.size)}x</strong>
+      <strong>${guestSize(guest)}x</strong>
     </div>
   `;
 }
@@ -410,7 +442,7 @@ function openDialog(dialog) {
 }
 
 function closeDialogs() {
-  [els.hostDialog, els.joinDialog, els.customFoodDialog].forEach((dialog) => {
+  [els.hostDialog, els.joinPickerDialog, els.joinDialog, els.customFoodDialog].forEach((dialog) => {
     if (dialog.open) dialog.close();
   });
   els.sheetBackdrop.hidden = true;
@@ -429,14 +461,79 @@ function openHostDialog() {
 function openJoinDialog(hostId) {
   const host = state.hosts.find((entry) => entry.id === hostId);
   if (!host) return;
+  closeDialogs();
   els.joinForm.reset();
   els.joinHostId.value = host.id;
-  document.querySelector("#partySize").max = seatsLeft(host);
+  draftPartyMembers = [{ id: uid("member"), name: "", isChild: false }];
   els.joinTarget.innerHTML = `
     <strong>${escapeHtml(host.hostName)} · ${formatDate(host.date, host.time)}</strong>
     <div class="host-meta">${escapeHtml(host.location)} · ${seatsLeft(host)} seats open</div>
   `;
+  renderPartyMembers();
   openDialog(els.joinDialog);
+}
+
+function openJoinPicker() {
+  const hosts = sortedHosts().filter((host) => seatsLeft(host) > 0);
+  els.joinPickerList.innerHTML = "";
+
+  if (!hosts.length) {
+    els.joinPickerList.innerHTML = `
+      <div class="empty-picker">
+        <p>No open dinner invites yet.</p>
+        <button class="primary-button" type="button" data-open-host>Host instead</button>
+      </div>
+    `;
+    openDialog(els.joinPickerDialog);
+    return;
+  }
+
+  hosts.forEach((host) => {
+    const button = document.createElement("button");
+    button.className = "picker-host";
+    button.type = "button";
+    button.dataset.pickJoin = host.id;
+    button.innerHTML = `
+      <span>
+        <strong>${escapeHtml(host.hostName)}</strong>
+        <small>${formatDate(host.date, host.time)} · ${escapeHtml(host.location)}</small>
+      </span>
+      <b>${seatsLeft(host)} seats</b>
+    `;
+    els.joinPickerList.append(button);
+  });
+
+  openDialog(els.joinPickerDialog);
+}
+
+function renderPartyMembers() {
+  els.partyMemberList.innerHTML = "";
+  const host = state.hosts.find((entry) => entry.id === els.joinHostId.value);
+  const openSeats = host ? seatsLeft(host) : 24;
+
+  draftPartyMembers.forEach((member, index) => {
+    const row = document.createElement("div");
+    row.className = "party-member-row";
+    row.innerHTML = `
+      <label>
+        Member name
+        <input data-party-name="${index}" value="${escapeHtml(member.name)}" required placeholder="Name" />
+      </label>
+      <label class="child-toggle">
+        <input type="checkbox" data-party-child="${index}" ${member.isChild ? "checked" : ""} />
+        <span>Child</span>
+      </label>
+      <button class="icon-button" type="button" data-remove-party-member="${index}" ${
+        draftPartyMembers.length === 1 ? "disabled" : ""
+      } aria-label="Remove member">
+        <span aria-hidden="true">x</span>
+      </button>
+    `;
+    els.partyMemberList.append(row);
+  });
+
+  els.addPartyMemberButton.disabled = draftPartyMembers.length >= openSeats;
+  els.addPartyMemberButton.textContent = draftPartyMembers.length >= openSeats ? "No seats left" : "Add member";
 }
 
 function addCustomFood(name, options) {
@@ -454,14 +551,7 @@ function addCustomFood(name, options) {
 }
 
 els.openHostButton.addEventListener("click", openHostDialog);
-els.openJoinButton.addEventListener("click", () => {
-  const firstAvailable = sortedHosts().find((host) => seatsLeft(host) > 0);
-  if (firstAvailable) {
-    document.querySelector(`[data-join="${firstAvailable.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  } else {
-    openHostDialog();
-  }
-});
+els.openJoinButton.addEventListener("click", openJoinPicker);
 
 els.resetDemoButton.addEventListener("click", () => {
   state = seedState();
@@ -472,11 +562,26 @@ els.resetDemoButton.addEventListener("click", () => {
 els.sortSelect.addEventListener("change", renderHosts);
 els.foodSearch.addEventListener("input", renderFoods);
 els.addCustomFoodButton.addEventListener("click", () => openDialog(els.customFoodDialog));
+els.addPartyMemberButton.addEventListener("click", () => {
+  const host = state.hosts.find((entry) => entry.id === els.joinHostId.value);
+  if (host && draftPartyMembers.length >= seatsLeft(host)) return;
+  draftPartyMembers.push({ id: uid("member"), name: "", isChild: false });
+  renderPartyMembers();
+});
 els.sheetBackdrop.addEventListener("click", closeDialogs);
 
 document.addEventListener("click", (event) => {
   const closeButton = event.target.closest("[data-close-dialog]");
   if (closeButton) closeDialogs();
+
+  const openHostButton = event.target.closest("[data-open-host]");
+  if (openHostButton) {
+    closeDialogs();
+    openHostDialog();
+  }
+
+  const pickJoinButton = event.target.closest("[data-pick-join]");
+  if (pickJoinButton) openJoinDialog(pickJoinButton.dataset.pickJoin);
 
   const joinButton = event.target.closest("[data-join]");
   if (joinButton) openJoinDialog(joinButton.dataset.join);
@@ -493,6 +598,24 @@ document.addEventListener("click", (event) => {
     draftMenu.splice(Number(removeMenuButton.dataset.removeMenu), 1);
     renderSelectedMenu();
   }
+
+  const removePartyButton = event.target.closest("[data-remove-party-member]");
+  if (removePartyButton && draftPartyMembers.length > 1) {
+    draftPartyMembers.splice(Number(removePartyButton.dataset.removePartyMember), 1);
+    renderPartyMembers();
+  }
+});
+
+els.partyMemberList.addEventListener("input", (event) => {
+  const nameInput = event.target.closest("[data-party-name]");
+  if (!nameInput) return;
+  draftPartyMembers[Number(nameInput.dataset.partyName)].name = nameInput.value;
+});
+
+els.partyMemberList.addEventListener("change", (event) => {
+  const childInput = event.target.closest("[data-party-child]");
+  if (!childInput) return;
+  draftPartyMembers[Number(childInput.dataset.partyChild)].isChild = childInput.checked;
 });
 
 els.selectedMenu.addEventListener("change", (event) => {
@@ -538,18 +661,32 @@ els.joinForm.addEventListener("submit", (event) => {
   const host = state.hosts.find((entry) => entry.id === els.joinHostId.value);
   if (!host) return;
 
-  const size = Number(document.querySelector("#partySize").value);
-  if (size > seatsLeft(host)) {
-    document.querySelector("#partySize").setCustomValidity(`Only ${seatsLeft(host)} seats are open.`);
-    els.joinForm.reportValidity();
+  const members = draftPartyMembers
+    .map((member) => ({
+      id: member.id || uid("member"),
+      name: member.name.trim(),
+      isChild: Boolean(member.isChild),
+    }))
+    .filter((member) => member.name);
+
+  if (!members.length) {
+    els.partyMemberList.querySelector("input")?.focus();
     return;
   }
 
-  document.querySelector("#partySize").setCustomValidity("");
+  if (members.length > seatsLeft(host)) {
+    const firstMemberInput = els.partyMemberList.querySelector("[data-party-name]");
+    firstMemberInput?.setCustomValidity(`Only ${seatsLeft(host)} seats are open.`);
+    els.joinForm.reportValidity();
+    firstMemberInput?.setCustomValidity("");
+    return;
+  }
+
   host.guests.push({
     id: uid("guest"),
     name: document.querySelector("#guestName").value.trim(),
-    size,
+    size: members.length,
+    members,
     notes: document.querySelector("#guestNotes").value.trim(),
   });
   saveState();

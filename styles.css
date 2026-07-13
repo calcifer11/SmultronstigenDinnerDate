@@ -294,6 +294,41 @@ h3 {
   margin: 12px 0 22px;
 }
 
+.neighbor-strip {
+  display: grid;
+  grid-template-columns: 82px 1fr 82px;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 10px;
+  border: 1px solid rgba(97, 58, 29, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 248, 236, 0.78);
+  box-shadow: 0 12px 28px rgba(80, 45, 20, 0.08);
+}
+
+.portrait-card {
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  border-radius: 14px;
+  background: #29160f;
+  box-shadow: 0 12px 24px rgba(22, 15, 11, 0.18);
+}
+
+.portrait-card img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: 50% 28%;
+}
+
+.portrait-copy h2 {
+  margin-bottom: 0;
+  font-size: 1rem;
+  line-height: 1.18;
+}
+
 .stats-strip div {
   min-width: 0;
   padding: 12px 8px;
@@ -635,6 +670,94 @@ legend {
   padding: 12px;
   border-radius: 12px;
   background: #fff0d5;
+}
+
+.picker-content {
+  display: grid;
+  gap: 14px;
+  padding: 18px 16px calc(env(safe-area-inset-bottom) + 18px);
+}
+
+.join-picker-list,
+.party-builder,
+.party-members {
+  display: grid;
+  gap: 10px;
+}
+
+.picker-host {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e2c59c;
+  border-radius: 14px;
+  color: var(--ink);
+  background: #fffaf2;
+  text-align: left;
+  cursor: pointer;
+}
+
+.picker-host span {
+  display: grid;
+  gap: 3px;
+}
+
+.picker-host small {
+  color: var(--muted);
+}
+
+.picker-host b {
+  flex: 0 0 auto;
+  color: var(--green);
+}
+
+.empty-picker {
+  display: grid;
+  gap: 12px;
+}
+
+.empty-picker p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.party-member-row {
+  display: grid;
+  grid-template-columns: 1fr auto 44px;
+  align-items: end;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #e2c59c;
+  border-radius: 12px;
+  background: #fffaf2;
+}
+
+.child-toggle {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid #d8ba91;
+  border-radius: 12px;
+  color: var(--ink);
+  background: #fff9ef;
+  white-space: nowrap;
+}
+
+.child-toggle input {
+  width: auto;
+  min-height: auto;
+}
+
+.guest-members {
+  margin-top: 2px;
+  color: var(--ink);
+  font-size: 0.85rem;
+  line-height: 1.35;
 }
 
 .photo-strip {

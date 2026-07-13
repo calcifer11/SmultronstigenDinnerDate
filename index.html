@@ -43,6 +43,19 @@
           </div>
         </section>
 
+        <section class="neighbor-strip" aria-label="Smultronstigen dinner hosts">
+          <div class="portrait-card">
+            <img src="image.png" alt="Neighbor cooking dinner" />
+          </div>
+          <div class="portrait-copy">
+            <p class="eyebrow">Dinner-date energy</p>
+            <h2>Warm kitchens, familiar faces, easy plans.</h2>
+          </div>
+          <div class="portrait-card">
+            <img src="image copy.png" alt="Neighbor serving pasta" />
+          </div>
+        </section>
+
         <section class="stats-strip" aria-label="Current dinner summary">
           <div>
             <strong id="liveCount">0</strong>
@@ -150,6 +163,21 @@
       </form>
     </dialog>
 
+    <dialog class="sheet small-sheet" id="joinPickerDialog" aria-labelledby="joinPickerTitle">
+      <div class="picker-content">
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow">Join dinner</p>
+            <h2 id="joinPickerTitle">Choose a host</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="button" data-close-dialog aria-label="Close">
+            <span aria-hidden="true">x</span>
+          </button>
+        </div>
+        <div class="join-picker-list" id="joinPickerList"></div>
+      </div>
+    </dialog>
+
     <dialog class="sheet" id="joinDialog" aria-labelledby="joinDialogTitle">
       <form id="joinForm" method="dialog">
         <input type="hidden" id="joinHostId" />
@@ -165,16 +193,21 @@
 
         <div class="join-target" id="joinTarget"></div>
 
-        <div class="form-grid">
-          <label>
-            Your name
-            <input id="guestName" autocomplete="name" required placeholder="Erik" />
-          </label>
-          <label>
-            Party size
-            <input id="partySize" type="number" min="1" max="24" value="2" required />
-          </label>
-        </div>
+        <label>
+          Contact name
+          <input id="guestName" autocomplete="name" required placeholder="Erik" />
+        </label>
+
+        <section class="party-builder" aria-labelledby="partyBuilderTitle">
+          <div class="section-header compact">
+            <div>
+              <p class="eyebrow">Party</p>
+              <h3 id="partyBuilderTitle">Members joining</h3>
+            </div>
+            <button class="text-button" id="addPartyMemberButton" type="button">Add member</button>
+          </div>
+          <div class="party-members" id="partyMemberList"></div>
+        </section>
 
         <label>
           Preferences or allergies
