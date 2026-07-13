@@ -135,12 +135,14 @@ function saveState() {
 
 function hasSupabaseConfig() {
   const config = window.SMULTRONSTIGEN_SUPABASE;
+  const key = config?.publishableKey || config?.anonKey;
   return Boolean(
     window.supabase &&
       config?.url &&
-      config?.anonKey &&
+      key &&
       !config.url.includes("YOUR_PROJECT_REF") &&
-      !config.anonKey.includes("YOUR_SUPABASE_ANON_KEY"),
+      !key.includes("YOUR_SUPABASE_ANON_KEY") &&
+      !key.includes("YOUR_SUPABASE_PUBLISHABLE_KEY"),
   );
 }
 
@@ -159,7 +161,7 @@ async function initRemoteState() {
   }
 
   const config = window.SMULTRONSTIGEN_SUPABASE;
-  db = window.supabase.createClient(config.url, config.anonKey);
+  db = window.supabase.createClient(config.url, config.publishableKey || config.anonKey);
 
   const { data, error } = await db.from(SUPABASE_TABLE).select("state").eq("id", "global").maybeSingle();
   if (error) {

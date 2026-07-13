@@ -33,16 +33,23 @@ Use Supabase mode for a shared neighborhood board.
 
 1. Create a Supabase project.
 2. In the Supabase SQL editor, run `supabase-schema.sql`.
-3. Copy `config.example.js` to `config.js`.
-4. Fill in your Supabase project URL and anon key in `config.js`.
-5. Open `index.html`. The header badge should show `Live sync`.
+3. In Supabase, copy your project URL and publishable key from `Project Settings > API`.
+4. In GitHub, open the repo and go to `Settings > Secrets and variables > Actions`.
+5. Add these repository secrets:
+   - `SUPABASE_URL`: your Supabase project URL.
+   - `SUPABASE_PUBLISHABLE_KEY`: your Supabase publishable key.
+6. Push to `main` or run the `Deploy GitHub Pages` workflow manually.
+7. Open the GitHub Pages site. The header badge should show `Live sync`.
 
-The anon key is expected to be public in a browser app. The included SQL only exposes one shared
-state row for this app.
+The publishable key is expected to be public in a browser app. Do not use a Supabase secret key in
+this frontend app. The included SQL only exposes one shared state row for this app.
 
-If you publish publicly with GitHub Pages, commit a filled `config.js` so browsers can connect to
-Supabase. In Supabase, add your GitHub Pages URL to any relevant allowed origins if you enable
-features that require origin checks.
+For local development, either edit `config.js` directly or copy `config.example.js` to `config.js`
+and fill in the same values. The GitHub Pages workflow overwrites `config.js` during deployment
+using the repository secrets above.
+
+In Supabase, add your GitHub Pages URL to any relevant allowed origins if you enable features that
+require origin checks.
 
 ## Features
 
