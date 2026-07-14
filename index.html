@@ -66,6 +66,11 @@
               <span id="joinButtonText">Gå med</span>
             </button>
           </div>
+          <div class="quick-guide" aria-label="Så fungerar det">
+            <div><span>1</span><p id="guideOne">Hitta en middag eller bjud in själv.</p></div>
+            <div><span>2</span><p id="guideTwo">Berätta vilka som kommer och välj mat.</p></div>
+            <div><span>3</span><p id="guideThree">Dyka upp, slå dig ner och ha det fint.</p></div>
+          </div>
         </section>
 
         <section class="neighbor-strip" aria-label="Smultronstigen dinner hosts">
@@ -100,6 +105,7 @@
           <div>
             <p class="eyebrow" id="upcomingEyebrow">Kommande</p>
             <h2 id="upcomingTitle">Aktiva middagsinbjudningar</h2>
+            <p class="section-help" id="upcomingHelp">Här ser du vad som är på gång och hur många platser som finns kvar.</p>
           </div>
           <select id="sortSelect" aria-label="Sort dinners">
             <option value="date" id="sortSoonest">Snarast</option>
@@ -177,6 +183,25 @@
 
     <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
 
+    <dialog class="invite-welcome" id="inviteWelcomeDialog" aria-labelledby="inviteWelcomeTitle">
+      <div class="invite-welcome-art" aria-hidden="true">
+        <img src="assets/family-dinner-3.png" alt="" />
+      </div>
+      <div class="invite-welcome-content">
+        <p class="eyebrow" id="inviteWelcomeEyebrow">Du är bjuden</p>
+        <h2 id="inviteWelcomeTitle">Vad roligt att du hittade hit.</h2>
+        <p id="inviteWelcomeText">Det här är Smultronstigens enkla middagsplanerare. Svara med vilka som kommer, välj mat för varje person och berätta om allergier. Det tar bara någon minut.</p>
+        <div class="invite-preview" id="invitePreview"></div>
+        <div class="welcome-steps">
+          <span id="inviteStepOne">1. Fyll i ditt namn och sällskap</span>
+          <span id="inviteStepTwo">2. Välj mat och tillbehör</span>
+          <span id="inviteStepThree">3. Klart — värden ser ditt svar</span>
+        </div>
+        <button class="primary-button" id="acceptInviteButton" type="button">Svara på inbjudan</button>
+        <button class="text-button" id="browseInviteButton" type="button">Titta runt först</button>
+      </div>
+    </dialog>
+
     <dialog class="sheet" id="hostDialog" aria-labelledby="hostDialogTitle">
       <form id="hostForm" method="dialog">
         <div class="sheet-header">
@@ -188,6 +213,8 @@
             <span aria-hidden="true">x</span>
           </button>
         </div>
+
+        <div class="form-intro" id="hostFormIntro">Du ordnar bordet — grannarna fyller i vilka som kommer och vad de vill äta. Börja med det viktigaste; resten kan du ändra senare.</div>
 
         <div class="form-grid">
           <label>
@@ -298,6 +325,8 @@
         </div>
 
         <div class="join-target" id="joinTarget"></div>
+
+        <div class="form-intro" id="joinFormIntro">Börja med kontaktpersonen. Lägg sedan till alla som följer med och välj mat för var och en.</div>
 
         <label>
           <span id="guestNameLabel">Kontaktperson</span>

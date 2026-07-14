@@ -24,6 +24,23 @@ const translations = {
     welcomeEyebrow: "Familjemiddagar",
     welcomeTitle: "Smultronstigens middagsplaner, utan gruppchatt-kaos.",
     welcomeText: "Levande inbjudningar, barnvänliga sällskapslistor och menyer alla kan kolla innan de går över.",
+    guideOne: "Hitta en middag eller bjud in själv.",
+    guideTwo: "Berätta vilka som kommer och välj mat.",
+    guideThree: "Dyk upp, slå dig ner och ha det fint.",
+    upcomingHelp: "Här ser du vad som är på gång och hur många platser som finns kvar.",
+    inviteWelcomeEyebrow: "Du är bjuden",
+    inviteWelcomeTitle: "Vad roligt att du hittade hit.",
+    inviteWelcomeText: "Det här är Smultronstigens enkla middagsplanerare. Svara med vilka som kommer, välj mat för varje person och berätta om allergier. Det tar bara någon minut.",
+    inviteStepOne: "1. Fyll i ditt namn och sällskap",
+    inviteStepTwo: "2. Välj mat och tillbehör",
+    inviteStepThree: "3. Klart — värden ser ditt svar",
+    acceptInvite: "Svara på inbjudan",
+    browseFirst: "Titta runt först",
+    invitedBy: "{name} bjuder in dig till middag",
+    placesRemain: "{count} platser kvar",
+    inviteFull: "Middagen är fullbokad",
+    hostFormIntro: "Du ordnar bordet — grannarna fyller i vilka som kommer och vad de vill äta. Börja med det viktigaste; resten kan du ändra senare.",
+    joinFormIntro: "Börja med kontaktpersonen. Lägg sedan till alla som följer med och välj mat för var och en.",
     host: "Bjud in",
     join: "Gå med",
     facesEyebrow: "Bekanta ansikten",
@@ -144,6 +161,23 @@ const translations = {
     welcomeEyebrow: "Family dinner planning",
     welcomeTitle: "Smultronstigen Dinner Plans, minus the group-chat chaos.",
     welcomeText: "Live invites, kid-friendly party lists, and menus everyone can check before walking over.",
+    guideOne: "Find a dinner or open your own table.",
+    guideTwo: "Say who is coming and choose everyone’s food.",
+    guideThree: "Show up, pull up a chair, and enjoy.",
+    upcomingHelp: "See what is coming up and how many places are still open.",
+    inviteWelcomeEyebrow: "You’re invited",
+    inviteWelcomeTitle: "We’re so glad you found your way here.",
+    inviteWelcomeText: "This is Smultronstigen’s simple dinner planner. Say who is coming, choose a meal for each person, and mention any allergies. It only takes a minute.",
+    inviteStepOne: "1. Add your name and party",
+    inviteStepTwo: "2. Choose meals and toppings",
+    inviteStepThree: "3. Done — your host sees your reply",
+    acceptInvite: "Reply to the invitation",
+    browseFirst: "Look around first",
+    invitedBy: "{name} is inviting you to dinner",
+    placesRemain: "{count} places left",
+    inviteFull: "This dinner is fully booked",
+    hostFormIntro: "You set the table — neighbors add who is coming and what they would like to eat. Start with the essentials; you can edit the rest later.",
+    joinFormIntro: "Start with the contact person. Then add everyone coming along and choose a meal for each person.",
     host: "Host",
     join: "Join",
     facesEyebrow: "Familiar faces",
@@ -302,6 +336,7 @@ let applyingRemoteState = false;
 let pendingRemoteSave = null;
 let syncStatus = "localOnly";
 let inviteHandled = false;
+let invitedHostId = null;
 
 const starterFoods = [
   {
@@ -400,6 +435,8 @@ const els = {
   openJoinButton: document.querySelector("#openJoinButton"),
   hostDialog: document.querySelector("#hostDialog"),
   joinDialog: document.querySelector("#joinDialog"),
+  inviteWelcomeDialog: document.querySelector("#inviteWelcomeDialog"),
+  invitePreview: document.querySelector("#invitePreview"),
   joinPickerDialog: document.querySelector("#joinPickerDialog"),
   customFoodDialog: document.querySelector("#customFoodDialog"),
   sheetBackdrop: document.querySelector("#sheetBackdrop"),
@@ -651,7 +688,21 @@ function openInviteFromUrl() {
   const host = state.hosts.find((entry) => entry.id === hostId);
   if (!host) return;
   inviteHandled = true;
-  window.setTimeout(() => openJoinDialog(hostId), 80);
+  invitedHostId = hostId;
+  renderInviteWelcome(host);
+  window.setTimeout(() => openDialog(els.inviteWelcomeDialog), 80);
+}
+
+function renderInviteWelcome(host) {
+  if (!host || !els.invitePreview) return;
+  els.invitePreview.innerHTML = `
+    <strong>${escapeHtml(t("invitedBy", { name: host.hostName }))}</strong>
+    <span>${formatDate(host.date, host.time)} &middot; ${escapeHtml(translateLocation(host.location))}</span>
+    <span>${escapeHtml(t("placesRemain", { count: seatsLeft(host) }))}</span>
+  `;
+  const acceptButton = document.querySelector("#acceptInviteButton");
+  acceptButton.disabled = seatsLeft(host) === 0;
+  acceptButton.textContent = seatsLeft(host) === 0 ? t("inviteFull") : t("acceptInvite");
 }
 
 function escapeHtml(value) {
@@ -920,7 +971,7 @@ function openDialog(dialog) {
 }
 
 function closeDialogs() {
-  [els.hostDialog, els.joinPickerDialog, els.joinDialog, els.customFoodDialog].forEach((dialog) => {
+  [els.hostDialog, els.joinPickerDialog, els.joinDialog, els.customFoodDialog, els.inviteWelcomeDialog].forEach((dialog) => {
     if (dialog.open) dialog.close();
   });
   els.sheetBackdrop.hidden = true;
@@ -1132,6 +1183,9 @@ function applyTranslations() {
     "#welcomeEyebrow": "welcomeEyebrow",
     "#welcomeTitle": "welcomeTitle",
     "#welcomeText": "welcomeText",
+    "#guideOne": "guideOne",
+    "#guideTwo": "guideTwo",
+    "#guideThree": "guideThree",
     "#hostButtonText": "host",
     "#joinButtonText": "join",
     "#facesEyebrow": "facesEyebrow",
@@ -1141,6 +1195,15 @@ function applyTranslations() {
     "#guestLabel": "joining",
     "#upcomingEyebrow": "upcoming",
     "#upcomingTitle": "liveInvites",
+    "#upcomingHelp": "upcomingHelp",
+    "#inviteWelcomeEyebrow": "inviteWelcomeEyebrow",
+    "#inviteWelcomeTitle": "inviteWelcomeTitle",
+    "#inviteWelcomeText": "inviteWelcomeText",
+    "#inviteStepOne": "inviteStepOne",
+    "#inviteStepTwo": "inviteStepTwo",
+    "#inviteStepThree": "inviteStepThree",
+    "#acceptInviteButton": "acceptInvite",
+    "#browseInviteButton": "browseFirst",
     "#sortSoonest": "soonest",
     "#sortSeats": "mostRoom",
     "#sortRecent": "newest",
@@ -1163,6 +1226,7 @@ function applyTranslations() {
     "#adminResetButton": "resetDemo",
     "#hostDialogEyebrow": "newInvite",
     "#hostDialogTitle": editingHostId ? "editDinner" : "hostDinner",
+    "#hostFormIntro": "hostFormIntro",
     "#hostNameLabel": "yourName",
     "#hostDateLabel": "date",
     "#hostTimeLabel": "time",
@@ -1185,6 +1249,7 @@ function applyTranslations() {
     "#joinPickerTitle": "chooseHost",
     "#joinDialogEyebrow": "join",
     "#joinDialogTitle": "addParty",
+    "#joinFormIntro": "joinFormIntro",
     "#guestNameLabel": "contactName",
     "#partyEyebrow": "party",
     "#partyBuilderTitle": "membersJoining",
@@ -1226,6 +1291,8 @@ function applyTranslations() {
     renderJoinTarget(selectedJoinHost);
     renderPartyMembers();
   }
+  const invitedHost = state.hosts.find((host) => host.id === invitedHostId);
+  if (invitedHost) renderInviteWelcome(invitedHost);
 }
 
 function advanceHeroSlide() {
@@ -1238,6 +1305,18 @@ function advanceHeroSlide() {
 
 els.openHostButton.addEventListener("click", openHostDialog);
 els.openJoinButton.addEventListener("click", openJoinPicker);
+document.querySelector("#acceptInviteButton").addEventListener("click", () => {
+  const hostId = invitedHostId;
+  closeDialogs();
+  if (hostId) openJoinDialog(hostId);
+});
+document.querySelector("#browseInviteButton").addEventListener("click", closeDialogs);
+document.querySelectorAll("dialog").forEach((dialog) => {
+  dialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeDialogs();
+  });
+});
 els.languageToggle.addEventListener("click", () => {
   currentLang = currentLang === "sv" ? "en" : "sv";
   localStorage.setItem(LANG_KEY, currentLang);
