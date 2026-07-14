@@ -92,6 +92,8 @@ const translations = {
     chooseMeal: "Välj maträtt",
     toppings: "Tillbehör",
     contactPerson: "Kontaktperson",
+    leaveDinner: "Ta bort mitt sällskap",
+    removeAttendee: "Ta bort person",
     child: "Barn",
     preferences: "Önskemål eller allergier",
     potluckContribution: "Mat ni tar med",
@@ -210,6 +212,8 @@ const translations = {
     chooseMeal: "Choose a meal",
     toppings: "Toppings",
     contactPerson: "Contact person",
+    leaveDinner: "Remove my party",
+    removeAttendee: "Remove person",
     child: "Child",
     preferences: "Preferences or allergies",
     potluckContribution: "Food you can bring",
@@ -805,6 +809,8 @@ function renderMenuTag(item) {
 
 function renderGuest(guest, host) {
   const members = Array.isArray(guest.members) ? guest.members : [];
+  const canLeave = guest.ownerId === ownerId;
+  const canManageMembers = isOwnedHost(host) || canLeave;
   const memberSummary = members.length
     ? members
         .map((member) => {
@@ -812,18 +818,20 @@ function renderGuest(guest, host) {
           const mealText = meal
             ? ` — ${translateFoodName({ id: meal.foodId, name: meal.name })}${member.included?.length ? ` (${member.included.map(translateOption).join(", ")})` : ""}`
             : "";
-          return `${member.name || t("guest")}${member.isChild ? ` (${t("childSuffix")})` : ""}${mealText}`;
+          const label = `${member.name || t("guest")}${member.isChild ? ` (${t("childSuffix")})` : ""}${mealText}`;
+          return `<div class="guest-member-line"><span>${escapeHtml(label)}</span>${canManageMembers ? `<button class="danger-link" type="button" data-remove-guest-member="${escapeHtml(host.id)}" data-guest-id="${escapeHtml(guest.id)}" data-member-id="${escapeHtml(member.id)}">${t("removeAttendee")}</button>` : ""}</div>`;
         })
-        .join(", ")
-    : `${guestSize(guest)} ${t("xJoining")}`;
+        .join("")
+    : `<div class="guest-member-line"><span>${guestSize(guest)} ${t("xJoining")}</span></div>`;
   const contributions = Array.isArray(guest.contributions) ? guest.contributions : [];
   return `
     <div class="guest-row">
       <div>
         <strong>${escapeHtml(guest.name)}</strong>
-        <div class="guest-members">${escapeHtml(memberSummary)}</div>
+        <div class="guest-members">${memberSummary}</div>
         ${contributions.length ? `<div class="guest-notes">${escapeHtml(`${t("brings")}: ${contributions.join(", ")}`)}</div>` : ""}
         ${guest.notes ? `<div class="guest-notes">${escapeHtml(guest.notes)}</div>` : ""}
+        ${canLeave ? `<button class="danger-link leave-party-button" type="button" data-leave-party="${escapeHtml(host.id)}" data-guest-id="${escapeHtml(guest.id)}">${t("leaveDinner")}</button>` : ""}
       </div>
       <strong>${guestSize(guest)}x</strong>
     </div>
@@ -1328,6 +1336,32 @@ document.addEventListener("click", (event) => {
     render();
   }
 
+  const leavePartyButton = event.target.closest("[data-leave-party]");
+  if (leavePartyButton) {
+    const host = state.hosts.find((entry) => entry.id === leavePartyButton.dataset.leaveParty);
+    const guest = host?.guests.find((entry) => entry.id === leavePartyButton.dataset.guestId);
+    if (host && guest?.ownerId === ownerId) {
+      host.guests = host.guests.filter((entry) => entry.id !== guest.id);
+      saveState();
+      render();
+    }
+  }
+
+  const removeGuestMemberButton = event.target.closest("[data-remove-guest-member]");
+  if (removeGuestMemberButton) {
+    const host = state.hosts.find((entry) => entry.id === removeGuestMemberButton.dataset.removeGuestMember);
+    const guest = host?.guests.find((entry) => entry.id === removeGuestMemberButton.dataset.guestId);
+    if (host && guest && (isOwnedHost(host) || guest.ownerId === ownerId)) {
+      const removedMember = (guest.members || []).find((member) => member.id === removeGuestMemberButton.dataset.memberId);
+      guest.members = (guest.members || []).filter((member) => member.id !== removeGuestMemberButton.dataset.memberId);
+      guest.size = guest.members.length;
+      if (!guest.members.length) host.guests = host.guests.filter((entry) => entry.id !== guest.id);
+      else if (removedMember?.name === guest.name) guest.name = guest.members[0].name;
+      saveState();
+      render();
+    }
+  }
+
   const removeMenuButton = event.target.closest("[data-remove-menu]");
   if (removeMenuButton) {
     draftMenu.splice(Number(removeMenuButton.dataset.removeMenu), 1);
@@ -1505,6 +1539,7 @@ els.joinForm.addEventListener("submit", (event) => {
 
   host.guests.push({
     id: uid("guest"),
+    ownerId,
     name: document.querySelector("#guestName").value.trim(),
     size: members.length,
     members,

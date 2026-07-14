@@ -1121,6 +1121,29 @@ legend {
   line-height: 1.35;
 }
 
+.guest-member-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.danger-link {
+  padding: 2px 0;
+  border: 0;
+  color: #a33128;
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.leave-party-button {
+  margin-top: 8px;
+}
+
 .photo-strip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
