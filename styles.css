@@ -307,6 +307,29 @@ h3 {
   box-shadow: 0 12px 28px rgba(80, 45, 20, 0.08);
 }
 
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.image-gallery img {
+  width: 100%;
+  aspect-ratio: 1;
+  display: block;
+  object-fit: cover;
+  border: 1px solid rgba(255, 238, 208, 0.62);
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(80, 45, 20, 0.1);
+}
+
+.image-gallery img:nth-child(1),
+.image-gallery img:nth-child(4) {
+  grid-column: span 2;
+  aspect-ratio: 2 / 1;
+}
+
 .portrait-card {
   overflow: hidden;
   aspect-ratio: 3 / 4;
@@ -494,8 +517,12 @@ legend {
 
 .card-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 8px;
+}
+
+.card-actions.owned {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .sheet-backdrop {
@@ -775,22 +802,21 @@ legend {
 }
 
 .tile-one {
-  background-image: url("assets/hero-dinner-1.png");
+  background-image: url("assets/family-dinner-2.png");
   background-position: 50% 52%;
   background-size: 190%;
 }
 
 .tile-two {
-  background-image: url("assets/hero-dinner-2.png");
+  background-image: url("assets/family-dinner-3.png");
   background-position: 50% 54%;
   background-size: 190%;
 }
 
 .tile-three {
-  background:
-    radial-gradient(circle at 42% 72%, rgba(255, 210, 122, 0.92) 0 9%, transparent 10%),
-    radial-gradient(circle at 50% 48%, #fff0d8 0 28%, transparent 29%),
-    linear-gradient(135deg, #5e2f1d, #bd7430 55%, #243d29);
+  background-image: url("assets/family-dinner-5.png");
+  background-position: 50% 52%;
+  background-size: 190%;
 }
 
 .empty-state {

@@ -1,4 +1,5 @@
 const STORE_KEY = "smultronstigen-dinner-state-v1";
+const OWNER_KEY = "smultronstigen-dinner-owner-id-v1";
 const SUPABASE_TABLE = "dinner_app_state";
 
 let db = null;
@@ -84,7 +85,10 @@ function clone(value) {
 }
 
 function seedState() {
-  return { foods: clone(starterFoods), hosts: clone(demoHosts) };
+  return {
+    foods: clone(starterFoods),
+    hosts: clone(demoHosts).map((host) => ({ ...host, ownerId })),
+  };
 }
 
 const els = {
@@ -97,6 +101,7 @@ const els = {
   customFoodDialog: document.querySelector("#customFoodDialog"),
   sheetBackdrop: document.querySelector("#sheetBackdrop"),
   hostForm: document.querySelector("#hostForm"),
+  hostSubmitButton: document.querySelector("#hostSubmitButton"),
   joinForm: document.querySelector("#joinForm"),
   customFoodForm: document.querySelector("#customFoodForm"),
   hostList: document.querySelector("#hostList"),
@@ -117,9 +122,11 @@ const els = {
   syncBadge: document.querySelector("#syncBadge"),
 };
 
+const ownerId = getOwnerId();
 let state = loadState();
 let draftMenu = [];
 let draftPartyMembers = [];
+let editingHostId = null;
 
 function nextDate(days) {
   const date = new Date();
@@ -245,6 +252,18 @@ function uid(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function getOwnerId() {
+  const saved = localStorage.getItem(OWNER_KEY);
+  if (saved) return saved;
+  const next = uid("owner");
+  localStorage.setItem(OWNER_KEY, next);
+  return next;
+}
+
+function isOwnedHost(host) {
+  return host.ownerId === ownerId;
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -316,6 +335,7 @@ function renderHosts() {
 
   hosts.forEach((host) => {
     const left = seatsLeft(host);
+    const owned = isOwnedHost(host);
     const card = document.createElement("article");
     card.className = "host-card";
     card.innerHTML = `
@@ -333,9 +353,16 @@ function renderHosts() {
         ${host.menu.map(renderMenuTag).join("")}
       </div>
       ${host.guests.length ? `<div class="guest-list">${host.guests.map(renderGuest).join("")}</div>` : ""}
-      <div class="card-actions">
+      <div class="card-actions ${owned ? "owned" : ""}">
         <button class="secondary-button" type="button" data-join="${host.id}" ${left === 0 ? "disabled" : ""}>Join</button>
-        <button class="danger-button" type="button" data-remove="${host.id}">Remove</button>
+        ${
+          owned
+            ? `
+              <button class="secondary-button" type="button" data-edit-host="${host.id}">Edit</button>
+              <button class="danger-button" type="button" data-remove="${host.id}">Remove</button>
+            `
+            : ""
+        }
       </div>
     `;
     els.hostList.append(card);
@@ -449,11 +476,34 @@ function closeDialogs() {
 }
 
 function openHostDialog() {
+  editingHostId = null;
   draftMenu = [];
   els.hostForm.reset();
+  document.querySelector("#hostDialogTitle").textContent = "Host dinner";
+  els.hostSubmitButton.textContent = "Publish host";
   els.hostDate.value = nextDate(1);
   document.querySelector("#hostTime").value = "18:30";
   document.querySelector("#hostSeats").value = 4;
+  renderSelectedMenu();
+  openDialog(els.hostDialog);
+}
+
+function openEditHostDialog(hostId) {
+  const host = state.hosts.find((entry) => entry.id === hostId);
+  if (!host || !isOwnedHost(host)) return;
+
+  editingHostId = host.id;
+  draftMenu = clone(host.menu || []);
+  els.hostForm.reset();
+  document.querySelector("#hostDialogTitle").textContent = "Edit dinner";
+  els.hostSubmitButton.textContent = "Save changes";
+  document.querySelector("#hostName").value = host.hostName || "";
+  document.querySelector("#hostDate").value = host.date || nextDate(1);
+  document.querySelector("#hostTime").value = host.time || "18:30";
+  document.querySelector("#hostSeats").value = host.seats || 4;
+  document.querySelector("#hostNotes").value = host.notes || "";
+  const locationInput = document.querySelector(`[name="hostLocation"][value="${CSS.escape(host.location || "Our place")}"]`);
+  if (locationInput) locationInput.checked = true;
   renderSelectedMenu();
   openDialog(els.hostDialog);
 }
@@ -586,9 +636,12 @@ document.addEventListener("click", (event) => {
   const joinButton = event.target.closest("[data-join]");
   if (joinButton) openJoinDialog(joinButton.dataset.join);
 
+  const editHostButton = event.target.closest("[data-edit-host]");
+  if (editHostButton) openEditHostDialog(editHostButton.dataset.editHost);
+
   const removeButton = event.target.closest("[data-remove]");
   if (removeButton) {
-    state.hosts = state.hosts.filter((host) => host.id !== removeButton.dataset.remove);
+    state.hosts = state.hosts.filter((host) => host.id !== removeButton.dataset.remove || !isOwnedHost(host));
     saveState();
     render();
   }
@@ -639,8 +692,7 @@ els.hostForm.addEventListener("submit", (event) => {
   }
 
   const form = new FormData(els.hostForm);
-  state.hosts.push({
-    id: uid("host"),
+  const nextHost = {
     hostName: form.get("hostName").trim(),
     date: form.get("hostDate"),
     time: form.get("hostTime"),
@@ -648,9 +700,27 @@ els.hostForm.addEventListener("submit", (event) => {
     seats: Number(form.get("hostSeats")),
     notes: document.querySelector("#hostNotes").value.trim(),
     menu: draftMenu,
-    guests: [],
-    createdAt: Date.now(),
-  });
+  };
+
+  if (editingHostId) {
+    const hostIndex = state.hosts.findIndex((host) => host.id === editingHostId && isOwnedHost(host));
+    if (hostIndex === -1) return;
+    state.hosts[hostIndex] = {
+      ...state.hosts[hostIndex],
+      ...nextHost,
+      updatedAt: Date.now(),
+    };
+  } else {
+    state.hosts.push({
+      id: uid("host"),
+      ...nextHost,
+      ownerId,
+      guests: [],
+      createdAt: Date.now(),
+    });
+  }
+
+  editingHostId = null;
   saveState();
   closeDialogs();
   render();
