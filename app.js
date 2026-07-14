@@ -89,6 +89,9 @@ const translations = {
     preferences: "Önskemål eller allergier",
     potluckContribution: "Mat ni tar med",
     addCustomFood: "Lägg till egen rätt",
+    addTopping: "Lägg till topping",
+    toppingPlaceholder: "t.ex. koriander",
+    removeOption: "Ta bort",
     noInvites: "Inga middagsinbjudningar än",
     emptyText: "Bli första värden på Smultronstigen. Grannar ser din inbjudan här och kan lägga till sitt sällskap.",
     hostADinner: "Bjud in till middag",
@@ -197,6 +200,9 @@ const translations = {
     preferences: "Preferences or allergies",
     potluckContribution: "Food you can bring",
     addCustomFood: "Add custom food",
+    addTopping: "Add topping",
+    toppingPlaceholder: "e.g. cilantro",
+    removeOption: "Remove",
     noInvites: "No dinner invites yet",
     emptyText: "Be the first Smultronstigen host. Neighbors will see your listing here and can add their party.",
     hostADinner: "Host a dinner",
@@ -795,10 +801,17 @@ function addFoodToDraft(food) {
     foodId: food.id,
     name: food.name,
     color: food.color,
+    options: [...food.options],
     included: [...food.options],
     excluded: [],
   });
   renderSelectedMenu();
+}
+
+function menuItemOptions(item) {
+  const food = state.foods.find((entry) => entry.id === item.foodId);
+  const options = Array.isArray(item.options) && item.options.length ? item.options : food?.options || [];
+  return [...new Set(options)];
 }
 
 function renderSelectedMenu() {
@@ -809,14 +822,14 @@ function renderSelectedMenu() {
   }
 
   draftMenu.forEach((item, itemIndex) => {
-    const food = state.foods.find((entry) => entry.id === item.foodId);
+    const options = menuItemOptions(item);
     const wrapper = document.createElement("div");
     wrapper.className = "menu-item";
     wrapper.innerHTML = `
       <div>
         <strong>${escapeHtml(translateFoodName({ id: item.foodId, name: item.name }))}</strong>
         <div class="option-grid">
-          ${(food?.options || [])
+          ${options
             .map(
               (option) => `
                 <label>
@@ -824,11 +837,16 @@ function renderSelectedMenu() {
                     item.included.includes(option) ? "checked" : ""
                   }>
                   ${escapeHtml(translateOption(option))}
+                  <button class="option-remove" type="button" data-remove-menu-option="${itemIndex}" data-option="${escapeHtml(option)}" aria-label="${t("removeOption")} ${escapeHtml(translateOption(option))}">x</button>
                 </label>
               `,
             )
             .join("")}
         </div>
+        <form class="inline-option-form" data-add-menu-option="${itemIndex}">
+          <input name="menuOptionName" placeholder="${t("toppingPlaceholder")}" />
+          <button class="text-button" type="submit">${t("addTopping")}</button>
+        </form>
       </div>
       <button class="icon-button" type="button" data-remove-menu="${itemIndex}" aria-label="Remove ${escapeHtml(item.name)}">
         <span aria-hidden="true">x</span>
@@ -1236,6 +1254,18 @@ document.addEventListener("click", (event) => {
     renderSelectedMenu();
   }
 
+  const removeMenuOptionButton = event.target.closest("[data-remove-menu-option]");
+  if (removeMenuOptionButton) {
+    const item = draftMenu[Number(removeMenuOptionButton.dataset.removeMenuOption)];
+    const option = removeMenuOptionButton.dataset.option;
+    if (item && option) {
+      item.options = menuItemOptions(item).filter((entry) => entry !== option);
+      item.included = item.included.filter((entry) => entry !== option);
+      item.excluded = item.excluded.filter((entry) => entry !== option);
+      renderSelectedMenu();
+    }
+  }
+
   const removePartyButton = event.target.closest("[data-remove-party-member]");
   if (removePartyButton && draftPartyMembers.length > 1) {
     draftPartyMembers.splice(Number(removePartyButton.dataset.removePartyMember), 1);
@@ -1266,6 +1296,27 @@ els.selectedMenu.addEventListener("change", (event) => {
     item.included = item.included.filter((option) => option !== input.value);
     if (!item.excluded.includes(input.value)) item.excluded.push(input.value);
   }
+});
+
+els.selectedMenu.addEventListener("submit", (event) => {
+  const form = event.target.closest("[data-add-menu-option]");
+  if (!form) return;
+  event.preventDefault();
+
+  const item = draftMenu[Number(form.dataset.addMenuOption)];
+  const input = form.elements.menuOptionName;
+  const option = input.value.trim();
+  if (!item || !option) return;
+
+  const existing = menuItemOptions(item);
+  if (!existing.some((entry) => entry.toLowerCase() === option.toLowerCase())) {
+    item.options = [...existing, option];
+    item.included.push(option);
+    item.excluded = item.excluded.filter((entry) => entry !== option);
+  }
+
+  input.value = "";
+  renderSelectedMenu();
 });
 
 els.hostForm.addEventListener("submit", (event) => {
