@@ -88,6 +88,10 @@ const translations = {
     addMember: "Lägg till person",
     noSeatsLeft: "Inga platser kvar",
     memberName: "Namn",
+    mealChoice: "Maträtt",
+    chooseMeal: "Välj maträtt",
+    toppings: "Tillbehör",
+    contactPerson: "Kontaktperson",
     child: "Barn",
     preferences: "Önskemål eller allergier",
     potluckContribution: "Mat ni tar med",
@@ -202,6 +206,10 @@ const translations = {
     addMember: "Add member",
     noSeatsLeft: "No seats left",
     memberName: "Name",
+    mealChoice: "Meal",
+    chooseMeal: "Choose a meal",
+    toppings: "Toppings",
+    contactPerson: "Contact person",
     child: "Child",
     preferences: "Preferences or allergies",
     potluckContribution: "Food you can bring",
@@ -355,8 +363,8 @@ const demoHosts = [
         size: 2,
         notes: "No sesame, please.",
         members: [
-          { id: "member-demo-1", name: "Maja", isChild: false },
-          { id: "member-demo-2", name: "Leo", isChild: true },
+          { id: "member-demo-1", name: "Maja", isChild: false, mealId: "poke", included: ["rice", "salmon", "avocado", "mango"] },
+          { id: "member-demo-2", name: "Leo", isChild: true, mealId: "poke", included: ["rice", "salmon", "avocado", "mango"] },
         ],
       },
     ],
@@ -740,7 +748,7 @@ function renderHosts() {
       <div class="menu-tags">
         ${host.menu.map(renderMenuTag).join("")}
       </div>
-      ${host.guests.length ? `<div class="guest-list">${host.guests.map(renderGuest).join("")}</div>` : ""}
+      ${host.guests.length ? `<div class="guest-list">${host.guests.map((guest) => renderGuest(guest, host)).join("")}</div>` : ""}
       <div class="card-actions ${owned ? "owned" : ""}">
         <button class="secondary-button" type="button" data-join="${host.id}" ${left === 0 ? "disabled" : ""}>${t("join")}</button>
         ${
@@ -795,11 +803,17 @@ function renderMenuTag(item) {
   `;
 }
 
-function renderGuest(guest) {
+function renderGuest(guest, host) {
   const members = Array.isArray(guest.members) ? guest.members : [];
   const memberSummary = members.length
     ? members
-        .map((member) => `${member.name || t("guest")}${member.isChild ? ` (${t("childSuffix")})` : ""}`)
+        .map((member) => {
+          const meal = member.mealId ? (host.menu || []).find((item) => item.foodId === member.mealId) : null;
+          const mealText = meal
+            ? ` — ${translateFoodName({ id: meal.foodId, name: meal.name })}${member.included?.length ? ` (${member.included.map(translateOption).join(", ")})` : ""}`
+            : "";
+          return `${member.name || t("guest")}${member.isChild ? ` (${t("childSuffix")})` : ""}${mealText}`;
+        })
         .join(", ")
     : `${guestSize(guest)} ${t("xJoining")}`;
   const contributions = Array.isArray(guest.contributions) ? guest.contributions : [];
@@ -947,10 +961,22 @@ function openJoinDialog(hostId) {
   els.joinForm.reset();
   els.joinHostId.value = host.id;
   els.potluckContributionField.hidden = !host.potluck;
-  draftPartyMembers = [{ id: uid("member"), name: "", isChild: false }];
+  draftPartyMembers = [newDraftPartyMember(host, true)];
   renderJoinTarget(host);
   renderPartyMembers();
   openDialog(els.joinDialog);
+}
+
+function newDraftPartyMember(host, isContact = false) {
+  const meal = host?.menu?.[0];
+  return {
+    id: uid("member"),
+    name: "",
+    isChild: false,
+    isContact,
+    mealId: meal?.foodId || "",
+    included: meal ? [...(meal.included || [])] : [],
+  };
 }
 
 function renderJoinTarget(host) {
@@ -999,10 +1025,12 @@ function renderPartyMembers() {
   const openSeats = host ? seatsLeft(host) : 24;
 
   draftPartyMembers.forEach((member, index) => {
+    const selectedMeal = host?.menu?.find((item) => item.foodId === member.mealId);
+    const availableOptions = selectedMeal ? menuItemOptions(selectedMeal).filter((option) => !selectedMeal.excluded?.includes(option)) : [];
     const row = document.createElement("div");
     row.className = "party-member-row";
     row.innerHTML = `
-      <label>
+      <label class="member-name-field">
         ${t("memberName")}
         <input data-party-name="${index}" value="${escapeHtml(member.name)}" required placeholder="${t("memberName")}" />
       </label>
@@ -1010,11 +1038,24 @@ function renderPartyMembers() {
         <input type="checkbox" data-party-child="${index}" ${member.isChild ? "checked" : ""} />
         <span>${t("child")}</span>
       </label>
-      <button class="icon-button" type="button" data-remove-party-member="${index}" ${
-        draftPartyMembers.length === 1 ? "disabled" : ""
-      } aria-label="Remove member">
+      <button class="icon-button" type="button" data-remove-party-member="${index}" ${member.isContact ? "disabled" : ""} aria-label="${t("remove")}">
         <span aria-hidden="true">x</span>
       </button>
+      ${member.isContact ? `<span class="contact-person-label">${t("contactPerson")}</span>` : ""}
+      ${host?.menu?.length ? `
+        <label class="member-meal-field">
+          ${t("mealChoice")}
+          <select data-party-meal="${index}" required>
+            <option value="">${t("chooseMeal")}</option>
+            ${host.menu.map((meal) => `<option value="${escapeHtml(meal.foodId)}" ${meal.foodId === member.mealId ? "selected" : ""}>${escapeHtml(translateFoodName({ id: meal.foodId, name: meal.name }))}</option>`).join("")}
+          </select>
+        </label>
+        <fieldset class="member-toppings">
+          <legend>${t("toppings")}</legend>
+          <div class="member-topping-options">
+            ${availableOptions.map((option) => `<label><input type="checkbox" data-party-topping="${index}" value="${escapeHtml(option)}" ${member.included?.includes(option) ? "checked" : ""}> ${escapeHtml(translateOption(option))}</label>`).join("")}
+          </div>
+        </fieldset>` : ""}
     `;
     els.partyMemberList.append(row);
   });
@@ -1238,7 +1279,7 @@ els.addCustomFoodButton.addEventListener("click", () => openDialog(els.customFoo
 els.addPartyMemberButton.addEventListener("click", () => {
   const host = state.hosts.find((entry) => entry.id === els.joinHostId.value);
   if (host && draftPartyMembers.length >= seatsLeft(host)) return;
-  draftPartyMembers.push({ id: uid("member"), name: "", isChild: false });
+  draftPartyMembers.push(newDraftPartyMember(host));
   renderPartyMembers();
 });
 els.sheetBackdrop.addEventListener("click", closeDialogs);
@@ -1306,8 +1347,10 @@ document.addEventListener("click", (event) => {
   }
 
   const removePartyButton = event.target.closest("[data-remove-party-member]");
-  if (removePartyButton && draftPartyMembers.length > 1) {
-    draftPartyMembers.splice(Number(removePartyButton.dataset.removePartyMember), 1);
+  if (removePartyButton) {
+    const index = Number(removePartyButton.dataset.removePartyMember);
+    if (draftPartyMembers[index]?.isContact) return;
+    draftPartyMembers.splice(index, 1);
     renderPartyMembers();
   }
 });
@@ -1315,13 +1358,42 @@ document.addEventListener("click", (event) => {
 els.partyMemberList.addEventListener("input", (event) => {
   const nameInput = event.target.closest("[data-party-name]");
   if (!nameInput) return;
-  draftPartyMembers[Number(nameInput.dataset.partyName)].name = nameInput.value;
+  const member = draftPartyMembers[Number(nameInput.dataset.partyName)];
+  member.name = nameInput.value;
+  if (member.isContact) document.querySelector("#guestName").value = nameInput.value;
 });
 
 els.partyMemberList.addEventListener("change", (event) => {
   const childInput = event.target.closest("[data-party-child]");
-  if (!childInput) return;
-  draftPartyMembers[Number(childInput.dataset.partyChild)].isChild = childInput.checked;
+  if (childInput) {
+    draftPartyMembers[Number(childInput.dataset.partyChild)].isChild = childInput.checked;
+    return;
+  }
+  const mealInput = event.target.closest("[data-party-meal]");
+  if (mealInput) {
+    const index = Number(mealInput.dataset.partyMeal);
+    const host = state.hosts.find((entry) => entry.id === els.joinHostId.value);
+    const meal = host?.menu?.find((item) => item.foodId === mealInput.value);
+    draftPartyMembers[index].mealId = mealInput.value;
+    draftPartyMembers[index].included = meal ? menuItemOptions(meal).filter((option) => !meal.excluded?.includes(option) && meal.included?.includes(option)) : [];
+    renderPartyMembers();
+    return;
+  }
+  const toppingInput = event.target.closest("[data-party-topping]");
+  if (toppingInput) {
+    const member = draftPartyMembers[Number(toppingInput.dataset.partyTopping)];
+    member.included = toppingInput.checked
+      ? [...new Set([...(member.included || []), toppingInput.value])]
+      : (member.included || []).filter((option) => option !== toppingInput.value);
+  }
+});
+
+document.querySelector("#guestName").addEventListener("input", (event) => {
+  const contact = draftPartyMembers.find((member) => member.isContact);
+  if (!contact) return;
+  contact.name = event.target.value;
+  const input = els.partyMemberList.querySelector(`[data-party-name="${draftPartyMembers.indexOf(contact)}"]`);
+  if (input) input.value = event.target.value;
 });
 
 els.selectedMenu.addEventListener("change", (event) => {
@@ -1413,6 +1485,8 @@ els.joinForm.addEventListener("submit", (event) => {
       id: member.id || uid("member"),
       name: member.name.trim(),
       isChild: Boolean(member.isChild),
+      mealId: member.mealId || "",
+      included: [...(member.included || [])],
     }))
     .filter((member) => member.name);
 

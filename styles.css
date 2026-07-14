@@ -1041,6 +1041,61 @@ legend {
   background: #fffaf2;
 }
 
+.member-name-field {
+  min-width: 0;
+}
+
+.contact-person-label {
+  grid-column: 1 / -1;
+  margin-top: -3px;
+  color: var(--green);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.member-meal-field,
+.member-toppings {
+  grid-column: 1 / -1;
+}
+
+.member-toppings {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.member-toppings legend {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.member-topping-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.member-topping-options label {
+  display: inline-flex;
+  min-height: 36px;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border: 1px solid #d8ba91;
+  border-radius: 10px;
+  background: #fff9ef;
+  font-size: 0.86rem;
+}
+
+.member-topping-options input {
+  width: auto;
+  min-height: auto;
+}
+
 .child-toggle {
   display: inline-flex;
   min-height: 44px;
