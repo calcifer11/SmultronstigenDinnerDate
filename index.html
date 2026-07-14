@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="sv">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#f8f4ec" />
-    <title>Smultronstigen Dinner</title>
+    <title>Smultronstigen Supper Club</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -12,33 +12,61 @@
       <header class="topbar">
         <div>
           <p class="eyebrow">Smultronstigen</p>
-          <h1>Dinner board</h1>
-          <span class="sync-badge" id="syncBadge">Local only</span>
+          <h1>Middagsklubben</h1>
+          <span class="sync-badge" id="syncBadge">Endast lokalt</span>
         </div>
-        <button class="icon-button" id="resetDemoButton" type="button" aria-label="Reset demo data" title="Reset demo data">
-          <span aria-hidden="true">↻</span>
-        </button>
+        <div class="topbar-actions">
+          <button class="admin-link" id="languageToggle" type="button">English</button>
+          <a class="admin-link" href="#admin" id="adminLink">Admin</a>
+          <button class="icon-button" id="resetDemoButton" type="button" aria-label="Reset demo data" title="Reset demo data">
+            <span aria-hidden="true">R</span>
+          </button>
+        </div>
       </header>
 
-      <main>
+      <main id="mainView">
         <section class="action-panel" aria-label="Dinner actions">
-          <div class="hero-art" aria-hidden="true">
-            <img src="assets/family-dinner-1.png" alt="" />
-            <img src="assets/family-dinner-2.png" alt="" />
+          <div class="hero-slideshow" aria-label="How Smultronstigen Supper Club works">
+            <article class="hero-slide is-active">
+              <img src="assets/family-dinner-1.png" alt="Families sharing dinner at a warm table" />
+              <div class="slide-copy">
+                <span class="season-pill" id="slideOneStep">Steg 1</span>
+                <h2 id="slideOneTitle">Bjud in när det finns plats vid bordet.</h2>
+                <p id="slideOneText">Välj datum, antal platser, plats och en meny som grannarna snabbt förstår.</p>
+              </div>
+            </article>
+            <article class="hero-slide">
+              <img src="assets/family-dinner-3.png" alt="Neighbors joining an outdoor family dinner" />
+              <div class="slide-copy">
+                <span class="season-pill" id="slideTwoStep">Steg 2</span>
+                <h2 id="slideTwoTitle">Gå med med hela sällskapet.</h2>
+                <p id="slideTwoText">Lägg till vuxna och barn med namn så värden vet vilka som kommer.</p>
+              </div>
+            </article>
+            <article class="hero-slide">
+              <img src="assets/family-dinner-6.png" alt="Family planning dinner menus together" />
+              <div class="slide-copy">
+                <span class="season-pill" id="slideThreeStep">Steg 3</span>
+                <h2 id="slideThreeTitle">Håll maten enkel och flexibel.</h2>
+                <p id="slideThreeText">Välj vanliga rätter, justera tillbehör och lägg till allergier i god tid.</p>
+              </div>
+            </article>
           </div>
+
           <div class="welcome-copy">
-            <span class="season-pill">Families on the street</span>
-            <h2>Plan the next neighbor dinner without a long group chat.</h2>
-            <p>Post when you can host, join with adults and kids, and keep menus clear for every family.</p>
+            <p class="eyebrow" id="welcomeEyebrow">Familjemiddagar</p>
+            <h2 id="welcomeTitle">Smultronstigens middagsplaner, utan gruppchatt-kaos.</h2>
+            <p id="welcomeText">Levande inbjudningar, barnvänliga sällskapslistor och menyer alla kan kolla innan de går över.</p>
           </div>
+
           <div class="primary-actions">
             <button class="primary-button" id="openHostButton" type="button">
-              <span aria-hidden="true">⌂</span>
-              Host
+              <span aria-hidden="true">+</span>
+              <span id="hostButtonText">Bjud in</span>
             </button>
             <button class="secondary-button" id="openJoinButton" type="button">
-              <span aria-hidden="true">＋</span>
-              Join
+              <span aria-hidden="true">+</span>
+              <span id="joinButtonText">Gå med</span>
             </button>
           </div>
         </section>
@@ -48,51 +76,95 @@
             <img src="image.png" alt="Neighbor cooking dinner" />
           </div>
           <div class="portrait-copy">
-            <p class="eyebrow">Familiar faces</p>
-            <h2>Warm kitchens, kids welcome, easy plans.</h2>
+            <p class="eyebrow" id="facesEyebrow">Bekanta ansikten</p>
+            <h2 id="facesTitle">Varma kök, barn välkomna, tydliga planer.</h2>
           </div>
           <div class="portrait-card">
             <img src="image copy.png" alt="Neighbor serving pasta" />
           </div>
         </section>
 
-        <section class="image-gallery" aria-label="Family dinner scenes">
-          <img src="assets/family-dinner-1.png" alt="Family preparing dinner together" />
-          <img src="assets/family-dinner-2.png" alt="Neighbors setting a family dinner table" />
-          <img src="assets/family-dinner-3.png" alt="Families sharing an outdoor courtyard dinner" />
-          <img src="assets/family-dinner-4.png" alt="Family dinner spread on a table" />
-          <img src="assets/family-dinner-5.png" alt="Neighbors arriving for dinner" />
-          <img src="assets/family-dinner-6.png" alt="Family planning dinner menus" />
-        </section>
-
         <section class="stats-strip" aria-label="Current dinner summary">
           <div>
             <strong id="liveCount">0</strong>
-            <span>live hosts</span>
+            <span id="liveLabel">aktiva värdar</span>
           </div>
           <div>
             <strong id="seatCount">0</strong>
-            <span>open seats</span>
+            <span id="seatLabel">lediga platser</span>
           </div>
           <div>
             <strong id="guestCount">0</strong>
-            <span>joining</span>
+            <span id="guestLabel">kommer</span>
           </div>
         </section>
 
         <section class="section-header">
           <div>
-            <p class="eyebrow">Upcoming</p>
-            <h2>Live dinner invites</h2>
+            <p class="eyebrow" id="upcomingEyebrow">Kommande</p>
+            <h2 id="upcomingTitle">Aktiva middagsinbjudningar</h2>
           </div>
           <select id="sortSelect" aria-label="Sort dinners">
-            <option value="date">Soonest</option>
-            <option value="seats">Most room</option>
-            <option value="recent">Newest</option>
+            <option value="date" id="sortSoonest">Snarast</option>
+            <option value="seats" id="sortSeats">Mest plats</option>
+            <option value="recent" id="sortRecent">Nyast</option>
           </select>
         </section>
 
         <section class="host-list" id="hostList" aria-live="polite"></section>
+      </main>
+
+      <main class="admin-page" id="adminView" hidden>
+        <section class="section-header admin-head">
+          <div>
+            <p class="eyebrow" id="adminEyebrow">Ägarverktyg</p>
+            <h2 id="adminTitle">Middagsklubben admin</h2>
+          </div>
+          <a class="secondary-button admin-close" href="#" id="adminBack">Tillbaka</a>
+        </section>
+
+        <form class="admin-card" id="adminLoginForm">
+          <h3 id="adminSignInTitle">Logga in</h3>
+          <label>
+            <span id="adminUsernameLabel">Användarnamn</span>
+            <input id="adminUsername" autocomplete="username" required />
+          </label>
+          <label>
+            <span id="adminPasswordLabel">Lösenord</span>
+            <input id="adminPassword" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="primary-button" type="submit" id="adminOpenButton">Öppna admin</button>
+        </form>
+
+        <section class="admin-stack" id="adminPanel" hidden>
+          <form class="admin-card" id="adminFoodForm">
+            <div class="section-header compact">
+              <div>
+                <p class="eyebrow" id="adminFoodEyebrow">Matdatabas</p>
+                <h3 id="adminFoodTitle">Lägg till vanlig rätt</h3>
+              </div>
+            </div>
+            <label>
+              <span id="adminFoodNameLabel">Rättens namn</span>
+              <input id="adminFoodName" required placeholder="Lasagne" />
+            </label>
+            <label>
+              <span id="adminFoodOptionsLabel">Valbara tillbehör</span>
+              <input id="adminFoodOptions" placeholder="köttfärs, vegetarisk, sallad, vitlöksbröd" />
+            </label>
+            <button class="primary-button" type="submit" id="adminAddFoodButton">Lägg till rätt</button>
+          </form>
+
+          <section class="admin-card">
+            <div class="section-header compact">
+              <div>
+                <p class="eyebrow" id="adminInvitesEyebrow">Inbjudningar</p>
+                <h3 id="adminInvitesTitle">Ta bort middagsinbjudan</h3>
+              </div>
+            </div>
+            <div class="admin-host-list" id="adminHostList"></div>
+          </section>
+        </section>
       </main>
     </div>
 
@@ -102,72 +174,90 @@
       <form id="hostForm" method="dialog">
         <div class="sheet-header">
           <div>
-            <p class="eyebrow">New invite</p>
-            <h2 id="hostDialogTitle">Host dinner</h2>
+            <p class="eyebrow" id="hostDialogEyebrow">Ny inbjudan</p>
+            <h2 id="hostDialogTitle">Bjud in till middag</h2>
           </div>
           <button class="icon-button" value="cancel" type="button" data-close-dialog aria-label="Close">
-            <span aria-hidden="true">×</span>
+            <span aria-hidden="true">x</span>
           </button>
         </div>
 
         <div class="form-grid">
           <label>
-            Your name
+            <span id="hostNameLabel">Ditt namn</span>
             <input id="hostName" name="hostName" autocomplete="name" required placeholder="Anna" />
           </label>
           <label>
-            Date
+            <span id="hostDateLabel">Datum</span>
             <input id="hostDate" name="hostDate" type="date" required />
           </label>
           <label>
-            Time
+            <span id="hostTimeLabel">Tid</span>
             <input id="hostTime" name="hostTime" type="time" required value="18:30" />
           </label>
           <label>
-            Seats available
+            <span id="hostSeatsLabel">Lediga platser</span>
             <input id="hostSeats" name="hostSeats" type="number" min="1" max="24" value="4" required />
           </label>
         </div>
 
         <fieldset class="segmented-field">
-          <legend>Location</legend>
+          <legend id="locationLegend">Plats</legend>
           <label>
             <input type="radio" name="hostLocation" value="Our place" checked />
-            <span>Our place</span>
+            <span id="locationOurLabel">Hos oss</span>
           </label>
           <label>
             <input type="radio" name="hostLocation" value="Your place" />
-            <span>Your place</span>
+            <span id="locationYourLabel">Hos er</span>
           </label>
           <label>
             <input type="radio" name="hostLocation" value="Garden" />
-            <span>Garden</span>
+            <span id="locationGardenLabel">Trädgården</span>
+          </label>
+        </fieldset>
+
+        <fieldset class="option-field">
+          <legend id="bookingOptionsLegend">Detaljer</legend>
+          <label class="option-toggle">
+            <input type="checkbox" id="hostByob" name="hostByob" />
+            <span id="byobLabel">BYOB</span>
+            <button class="info-button" type="button" data-info="byobInfo" aria-label="BYOB info" title="Bring your own bottle">i</button>
+          </label>
+          <label class="option-toggle">
+            <input type="checkbox" id="hostPotluck" name="hostPotluck" />
+            <span id="potluckLabel">Knytkalas</span>
+            <button class="info-button" type="button" data-info="potluckInfo" aria-label="Knytkalas info" title="Alla kan ta med något att äta">i</button>
+          </label>
+          <label class="option-toggle">
+            <input type="checkbox" id="hostPetFriendly" name="hostPetFriendly" />
+            <span id="petFriendlyLabel">Djurvänligt</span>
           </label>
         </fieldset>
 
         <section class="menu-builder" aria-labelledby="menuBuilderTitle">
           <div class="section-header compact">
             <div>
-              <p class="eyebrow">Food</p>
-              <h3 id="menuBuilderTitle">Menu options</h3>
+              <p class="eyebrow" id="foodEyebrow">Mat</p>
+              <h3 id="menuBuilderTitle">Menyalternativ</h3>
             </div>
-            <button class="text-button" id="addCustomFoodButton" type="button">Custom</button>
+            <button class="text-button" id="addCustomFoodButton" type="button">Egen</button>
           </div>
           <div class="food-search-row">
-            <input id="foodSearch" type="search" placeholder="Search common foods" aria-label="Search common foods" />
+            <input id="foodSearch" type="search" placeholder="Sök vanliga rätter" aria-label="Sök vanliga rätter" />
           </div>
           <div class="food-chips" id="foodChips"></div>
           <div class="selected-menu" id="selectedMenu"></div>
         </section>
 
         <label>
-          Notes
-          <textarea id="hostNotes" rows="3" placeholder="Allergies, kid-friendly details, what to bring..."></textarea>
+          <span id="hostNotesLabel">Anteckningar</span>
+          <textarea id="hostNotes" rows="3" placeholder="Allergier, barnvänliga detaljer, vad man kan ta med..."></textarea>
         </label>
 
         <div class="sheet-actions">
-          <button class="secondary-button" type="button" data-close-dialog>Cancel</button>
-          <button class="primary-button" id="hostSubmitButton" type="submit">Publish host</button>
+          <button class="secondary-button" type="button" data-close-dialog id="hostCancelButton">Avbryt</button>
+          <button class="primary-button" id="hostSubmitButton" type="submit">Publicera</button>
         </div>
       </form>
     </dialog>
@@ -176,8 +266,8 @@
       <div class="picker-content">
         <div class="sheet-header">
           <div>
-            <p class="eyebrow">Join dinner</p>
-            <h2 id="joinPickerTitle">Choose a host</h2>
+            <p class="eyebrow" id="joinPickerEyebrow">Gå med</p>
+            <h2 id="joinPickerTitle">Välj värd</h2>
           </div>
           <button class="icon-button" value="cancel" type="button" data-close-dialog aria-label="Close">
             <span aria-hidden="true">x</span>
@@ -192,40 +282,45 @@
         <input type="hidden" id="joinHostId" />
         <div class="sheet-header">
           <div>
-            <p class="eyebrow">Join dinner</p>
-            <h2 id="joinDialogTitle">Add your party</h2>
+            <p class="eyebrow" id="joinDialogEyebrow">Gå med</p>
+            <h2 id="joinDialogTitle">Lägg till ditt sällskap</h2>
           </div>
           <button class="icon-button" value="cancel" type="button" data-close-dialog aria-label="Close">
-            <span aria-hidden="true">×</span>
+            <span aria-hidden="true">x</span>
           </button>
         </div>
 
         <div class="join-target" id="joinTarget"></div>
 
         <label>
-          Contact name
+          <span id="guestNameLabel">Kontaktperson</span>
           <input id="guestName" autocomplete="name" required placeholder="Erik" />
         </label>
 
         <section class="party-builder" aria-labelledby="partyBuilderTitle">
           <div class="section-header compact">
             <div>
-              <p class="eyebrow">Party</p>
-              <h3 id="partyBuilderTitle">Members joining</h3>
+              <p class="eyebrow" id="partyEyebrow">Sällskap</p>
+              <h3 id="partyBuilderTitle">Personer som kommer</h3>
             </div>
-            <button class="text-button" id="addPartyMemberButton" type="button">Add member</button>
+            <button class="text-button" id="addPartyMemberButton" type="button">Lägg till person</button>
           </div>
           <div class="party-members" id="partyMemberList"></div>
         </section>
 
+        <label id="potluckContributionField" hidden>
+          <span id="potluckContributionLabel">Mat ni tar med</span>
+          <input id="guestContributions" placeholder="sallad, bröd, efterrätt" />
+        </label>
+
         <label>
-          Preferences or allergies
-          <textarea id="guestNotes" rows="3" placeholder="Vegetarian, no sesame, bringing dessert..."></textarea>
+          <span id="guestNotesLabel">Önskemål eller allergier</span>
+          <textarea id="guestNotes" rows="3" placeholder="Vegetariskt, ingen sesam, tar med efterrätt..."></textarea>
         </label>
 
         <div class="sheet-actions">
-          <button class="secondary-button" type="button" data-close-dialog>Cancel</button>
-          <button class="primary-button" type="submit">Join dinner</button>
+          <button class="secondary-button" type="button" data-close-dialog id="joinCancelButton">Avbryt</button>
+          <button class="primary-button" type="submit" id="joinSubmitButton">Gå med</button>
         </div>
       </form>
     </dialog>
@@ -234,24 +329,24 @@
       <form id="customFoodForm" method="dialog">
         <div class="sheet-header">
           <div>
-            <p class="eyebrow">Food database</p>
-            <h2 id="customFoodTitle">Add custom food</h2>
+            <p class="eyebrow" id="customFoodEyebrow">Matdatabas</p>
+            <h2 id="customFoodTitle">Lägg till egen rätt</h2>
           </div>
           <button class="icon-button" value="cancel" type="button" data-close-dialog aria-label="Close">
-            <span aria-hidden="true">×</span>
+            <span aria-hidden="true">x</span>
           </button>
         </div>
         <label>
-          Food name
-          <input id="customFoodName" required placeholder="Taco tray" />
+          <span id="customFoodNameLabel">Rättens namn</span>
+          <input id="customFoodName" required placeholder="Tacobricka" />
         </label>
         <label>
-          Customisable toppings or options
-          <input id="customFoodOptions" placeholder="chicken, salsa, jalapeno, cheese" />
+          <span id="customFoodOptionsLabel">Valbara tillbehör</span>
+          <input id="customFoodOptions" placeholder="kyckling, salsa, jalapeno, ost" />
         </label>
         <div class="sheet-actions">
-          <button class="secondary-button" type="button" data-close-dialog>Cancel</button>
-          <button class="primary-button" type="submit">Add food</button>
+          <button class="secondary-button" type="button" data-close-dialog id="customFoodCancelButton">Avbryt</button>
+          <button class="primary-button" type="submit" id="customFoodSubmitButton">Lägg till rätt</button>
         </div>
       </form>
     </dialog>
@@ -263,9 +358,9 @@
           <span class="photo tile-two"></span>
           <span class="photo tile-three"></span>
         </div>
-        <h2>No dinner invites yet</h2>
-        <p>Be the first Smultronstigen host. Neighbors will see your listing here and can add their party.</p>
-        <button class="primary-button" type="button" data-open-host>Host a dinner</button>
+        <h2 data-empty-title>Inga middagsinbjudningar än</h2>
+        <p data-empty-text>Bli första värden på Smultronstigen. Grannar ser din inbjudan här och kan lägga till sitt sällskap.</p>
+        <button class="primary-button" type="button" data-open-host data-empty-button>Bjud in till middag</button>
       </article>
     </template>
 
