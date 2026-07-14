@@ -18,9 +18,6 @@
         <div class="topbar-actions">
           <button class="admin-link" id="languageToggle" type="button">English</button>
           <a class="admin-link" href="#admin" id="adminLink">Admin</a>
-          <button class="icon-button" id="resetDemoButton" type="button" aria-label="Reset demo data" title="Reset demo data">
-            <span aria-hidden="true">R</span>
-          </button>
         </div>
       </header>
 
@@ -137,6 +134,16 @@
         </form>
 
         <section class="admin-stack" id="adminPanel" hidden>
+          <section class="admin-card reset-card">
+            <div>
+              <p class="eyebrow" id="adminResetEyebrow">Demo</p>
+              <h3 id="adminResetTitle">NollstÃ¤ll sidan</h3>
+            </div>
+            <button class="danger-button" id="resetDemoButton" type="button">
+              <span id="adminResetButton">NollstÃ¤ll demo</span>
+            </button>
+          </section>
+
           <form class="admin-card" id="adminFoodForm">
             <div class="section-header compact">
               <div>
