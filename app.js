@@ -51,6 +51,9 @@ const translations = {
     invites: "Inbjudningar",
     removeInvite: "Ta bort middagsinbjudan",
     demo: "Demo",
+    shareInvite: "Dela",
+    inviteCopied: "Inbjudningslanken ar kopierad.",
+    copyFailed: "Kopiera den har lanken:",
     resetSite: "Nollställ sidan",
     resetDemo: "Nollställ demo",
     newInvite: "Ny inbjudan",
@@ -162,6 +165,9 @@ const translations = {
     invites: "Invites",
     removeInvite: "Remove dinner invite",
     demo: "Demo",
+    shareInvite: "Share",
+    inviteCopied: "Invite link copied.",
+    copyFailed: "Copy this link:",
     resetSite: "Reset site",
     resetDemo: "Reset demo",
     newInvite: "New invite",
@@ -283,6 +289,7 @@ let remoteReady = false;
 let applyingRemoteState = false;
 let pendingRemoteSave = null;
 let syncStatus = "localOnly";
+let inviteHandled = false;
 
 const starterFoods = [
   {
@@ -608,6 +615,33 @@ function bookingOptionTags(host) {
   ].filter(Boolean);
 }
 
+function inviteUrl(hostId) {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.searchParams.set("invite", hostId);
+  return url.toString();
+}
+
+async function shareHostInvite(hostId) {
+  const link = inviteUrl(hostId);
+  try {
+    await navigator.clipboard.writeText(link);
+    window.alert(t("inviteCopied"));
+  } catch {
+    window.prompt(t("copyFailed"), link);
+  }
+}
+
+function openInviteFromUrl() {
+  if (inviteHandled) return;
+  const hostId = new URLSearchParams(window.location.search).get("invite");
+  if (!hostId) return;
+  const host = state.hosts.find((entry) => entry.id === hostId);
+  if (!host) return;
+  inviteHandled = true;
+  window.setTimeout(() => openJoinDialog(hostId), 80);
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -659,6 +693,7 @@ function render() {
   renderSelectedMenu();
   renderHosts();
   renderAdminHosts();
+  openInviteFromUrl();
 }
 
 function renderStats() {
@@ -711,6 +746,7 @@ function renderHosts() {
         ${
           owned
             ? `
+              <button class="secondary-button" type="button" data-share-host="${host.id}">${t("shareInvite")}</button>
               <button class="secondary-button" type="button" data-edit-host="${host.id}">${t("edit")}</button>
               <button class="danger-button" type="button" data-remove="${host.id}">${t("remove")}</button>
             `
@@ -1230,6 +1266,9 @@ document.addEventListener("click", (event) => {
 
   const joinButton = event.target.closest("[data-join]");
   if (joinButton) openJoinDialog(joinButton.dataset.join);
+
+  const shareHostButton = event.target.closest("[data-share-host]");
+  if (shareHostButton) shareHostInvite(shareHostButton.dataset.shareHost);
 
   const editHostButton = event.target.closest("[data-edit-host]");
   if (editHostButton) openEditHostDialog(editHostButton.dataset.editHost);
